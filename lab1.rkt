@@ -190,10 +190,26 @@
       )
   )
 
+;############ ejemplo ##################
 
+#|
+(define commit1 (list "lab1.rkt" "Seba Villa" 202003031829 "agregar hora" "add hora"))
+(define commit2 (list "lab1.rkt" "Seba Villa" 202003031829 "agregar hora" "add hora2"))
+(define commit3 (list "lab1.rkt" "Seba Villa" 202003031829 "agregar hora" "add hora3"))
+(define commit4 (list "lab1.rkt" "Seba Villa" 202003031829 "agregar hora" "add hora4"))
+(define commit5 (list "lab1.rkt" "Seba Villa" 202003031829 "agregar hora" "add hora5"))
+(define commit6 (list "lab1.rkt" "Seba Villa" 202003031829 "agregar hora" "add hora6"))
+(define commit7 (list "lab1.rkt" "Seba Villa" 202003031829 "agregar hora" "add hora7"))
+(define commit8 (list "lab1.rkt" "Seba Villa" 202003031829 "agregar hora" "add hora8"))
 
+(define WORKSPACE (createWorkspace (list commit1 commit2)))
+(define INDEX (createIndex (list commit3 commit4)))
+(define LOCAL (createLocal (list commit5 commit6)))
+(define REMOTE (createRemote (list commit7 commit8)))
 
+(createZonas WORKSPACE INDEX LOCAL REMOTE)
 
+|#
 
 ;##########################################################################################
 ;###################################TDA ZONAS##############################################
@@ -203,23 +219,24 @@
 
 ;Representacion:
 
-; Zonas esta representado por una lista con 4 elementos, cada elemento representará una zona
-; y cada zona será una lista con los commits en ella.
-; '( '(workspace) '(index) '(local) '(remote) )
+; Zonas esta representado por una lista con 5 elementos, los 4 primeros elementos representarán una zona
+; y cada zona será una lista con los commits en ella, el ultimo elemento es un log de comandos aplicados
+; '( '(workspace) '(index) '(local) '(remote) '(logs )
 
 ; Workspace está representado por una lista de commits
 ; Index está representado por una lista de commits
 ; Local Repository está representado por una lista de commits
 ; Remote Repository está representado por una lista de commits
+; Logs está representado por una lista de strings con el comando y el tiempo en el que se usaron.
 
 ; Constructores
 
 ;Dominio: workspace x index x local x remote
 ;Recorrido: zonas
 ;descripcion: Crea una lista que representa las zonas del GIT
-(define (createZonas workspace index local remote)
+(define (createZonas workspace index local remote logs)
   (if (and (and workspace? index?) (and local? remote?))
-      (list workspace index local remote)
+      (list workspace index local remote logs)
       "Las zonas tienen un formato incorrecto"
       )
   )
@@ -386,6 +403,17 @@
       )
   )
 
+;Dominio: remote repository
+;Recorrido: boleano
+;Descripcion:  Analiza el input, comprobando que la entrada sea un remote repository valido, es decir que sea una lista de coimmits validos
+
+(define (log? log)
+  (if (list? log)
+      #t
+      #f
+      )
+  )
+
 
 
 ; Selectores
@@ -395,9 +423,12 @@
 ;Descripcion: Obtiene el workspace de la zona
 
 (define (getWorkspace zona)
-  (if (workspace? (car zona))
-      (car zona)
+  (if (null? zona)
       null
+      (if (workspace? (car zona))
+          (car zona)
+          null
+          )
       )
   )
 
@@ -406,20 +437,25 @@
 ;Descripcion: Obtiene el Index de la zona
 
 (define (getIndex zona)
-  (if (index? (car (cdr zona)))
-      (car (cdr zona))
+  (if (null? zona)
       null
+      (if (index? (car (cdr zona)))
+          (car (cdr zona))
+          null
+          )
       )
   )
-
 ;Dominio: Zonas
 ;Recorrido: Local Repository
 ;Descripcion: Obtiene el Local Repository de la zona
 
 (define (getLocal zona)
-  (if (local? (car (cdr (cdr zona))))
-      (car (cdr (cdr zona)))
+  (if (null? zona)
       null
+      (if (local? (car (cdr (cdr zona))))
+          (car (cdr (cdr zona)))
+          null
+          )
       )
   )
 
@@ -428,16 +464,42 @@
 ;Descripcion: Obtiene el Remote Repository de la zona
 
 (define (getRemote zona)
-  (if (remote? (car (cdr (cdr (cdr zona)))))
-      (car (cdr (cdr (cdr zona))))
+  (if (null? zona)
       null
+      (if (remote? (car (cdr (cdr (cdr zona)))))
+          (car (cdr (cdr (cdr zona))))
+          null
+          )
+      )
+  )
+
+;Dominio: Zonas
+;Recorrido: Logs
+;Descripcion: Obtiene los logs de la zona
+
+(define (getLogs zona)
+  (if (null? zona)
+      null
+      (if (log? (car (cdr (cdr (cdr (cdr zona))))))
+          (car (cdr (cdr (cdr (cdr zona)))))
+          null
+          )
       )
   )
 
 
+;MODIFICADORES
+
+(define (addLogs comando tiempo zonas)
+  (list (getWorkspace zonas) (getIndex zonas) (getLocal zonas) (getRemote zonas) (append (list tiempo comando) (getLogs zonas) ))
+  )
 
 
+;##########################################################################################
+;######################################GIT################################################
+;##########################################################################################
 
+(define git (lambda (comando) (lambda (b) (comando b ))))
 
 ;##########################################################################################
 ;######################################PULL################################################
@@ -449,33 +511,48 @@
 ;Dominio: zonas
 ;Recorrido: nuevas zonas
 
-(define (pull zonas)
-  (if (null? zonas)
-      (list (getRemote zonas) (getIndex zonas) (getLocal zonas) (getRemote zonas))
-      (if (workspace? (car zonas))
-          (pull (cdr zonas))
-          "Las zonas no tienen el formato correcto"
+(define pull (lambda (zonas) (lambda (tiempo)
+                               (list (getRemote zonas)) (getIndex zonas) (getLocal zonas) (getRemote zonas) (addLogs "pull" tiempo zonas))))
 
-          )
-      )
-  )
 
 
 ;##########################################################################################
 ;######################################ADD#################################################
 ;##########################################################################################
-  
+
+
+(define add1 (lambda (archivos) (lambda (workspace) 
+                                  (if (null? workspace)
+                                      null
+                                      (if (null? archivos)
+                                          null
+                                          (if (equal? (getArchivo (car( getWorkspace zonas))) (car archivos))
+                                              (append  (getArchivo (car( getWorkspace zonas))) ((add1 archivos) cdr workspace))
+                                              (add1 (cdr archivos) workspace)
+
+                                              )
+                                          )
+                                      )
+                                  )
+               )
+  )
+ 
+
+
+
+
+
 ;Descripcion: Funcion que añade los cambios locales registrados en el workspace al index
 ;registrados en la zona de trabajo.
 ;Dominio: archivos
 ;Recorrido: Una nueva zona donde se ven reflejado los cambios hechos en los archivos especificados
 
 ;# CURRIFICACION CTM
-(define (suma n) (+ n n))
+(define (suma n m) (+ n m))
 
-(define git (lambda (a) (lambda (b) (* a (suma b)))))
+(define giat (lambda (a) (lambda (b) (* a (suma b)))))
 
 ; # CADA VEZ QUE SE USA GIT SE VA CREANDO UN COMMIT, ANALIZAR, SE VA CREANDO PERO NO ENTERO ALGUNOS ELEMENTOS
 ; QUEDAN EN NULL
 
-ASA
+
