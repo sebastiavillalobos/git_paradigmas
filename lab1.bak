@@ -1,0 +1,159 @@
+#lang racket
+
+; Obtener el ultimo elementoi de una lista
+;Domino: lista
+;Recorrdo: Elemento
+;Recursion de cola -> Sin elementos en espera
+
+(define getLast (lambda (lista)
+                  (if (null? (cdr lista))
+                      ( car lista)
+                      (getLast (cdr lista))
+                      )))
+
+; Unifica 2 listas
+;Dominio: Al menos 2 listas
+;Recorrido: Lista
+; OJOS cons solo funciona con un numero y una lista, la deja en el primer elemento/
+;Con append se puede agregar un  elemento al final, agregandolo como lista '(X)
+;Derrepente es mejor usar list envez de '
+(define myAppend (lambda (L1 L2)
+                   (if (null? L1)
+                       L2
+                       (if (null? L2)
+                           L1
+                           (if (null? (cdr L1))
+                               (car L1)
+                               (if (null? cdr L2)
+                                   (cons L1 (car L2))
+                                   (myAppend L1 (cdr L2))
+  
+                                   ))
+                           )
+
+                       )
+                   ))
+
+;##########################################################################################
+;##########################################################################################
+;##########################################################################################
+
+; TDA Commit
+
+; Representacion: Una lista conformada por elementos, string x int x string x string
+; '(Autor, marca de tiempo, mensaje descriptivo, cambios almacenados)
+
+;Constructor
+
+(define  (lambda createCommit autor tiempo descripcion cambios)
+  (if (and (and autor? tiempo?)(and descripcion? cambios?))
+      (cons (cons autor tiempo)(cons descripcion cambios))
+      "Commit con parametros no permitidos"
+
+
+      )
+    
+
+
+  )
+
+
+; Pertenencia
+ 
+;Dominio: String
+;Recorrido: Boleano
+;Descripcion: Analiza el input, comprobando que la entrada sea un elemento valido para la construccion.
+
+
+(define autor? (lambda (autor)
+                 (if (null? autor)
+                     #f
+                     (if (string? autor)
+                         #t
+                         #f)
+                     )
+                 )
+  )
+ 
+;Dominio: Intiger
+;Recorrido: Boleano
+;Descripcion: Analiza el input, comprobando que la entrada sea un elemento valido para la construccion.
+
+(define  tiempo? (lambda (tiempo)
+                   (if (null? autor)
+                       #f
+                       (if (int? tiempo)
+                           (if (> tiempo 0)
+                               #t
+                               #f)
+                           #f)
+                       )
+                   )
+  )
+ 
+;Dominio: String
+;Recorrido: Boleano
+;Descripcion: Analiza el input, comprobando que la entrada sea un elemento valido para la construccion.
+
+(define descripcion? (lambda (descripcion)
+                       (if (null? descripcion)
+                           #f
+                           (if (string? descripcion)
+                               #t
+                               #f)
+                           )
+                       )
+  )
+ 
+;Dominio: String
+;Recorrido: Boleano
+;Descripcion: Analiza el input, comprobando que la entrada sea un elemento valido para la construccion.
+
+(define cambios? (lambda  (cambios)
+                   (if (null? cambios)
+                       #f
+                       (if (string? cambios)
+                           #t
+                           #f)
+                       )
+                   )
+  )
+ 
+
+;##########################################################################################
+;##########################################################################################
+;##########################################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+; TDA Zonas
+
+

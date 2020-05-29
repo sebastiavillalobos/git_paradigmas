@@ -1,0 +1,50 @@
+#lang racket
+
+; Obtener el ultimo elementoi de una lista
+;Domino: lista
+;Recorrdo: Elemento
+;Recursion de cola -> Sin elementos en espera
+
+(define getLast (lambda (lista)
+                 (if (null? (cdr lista))
+                    ( car lista)
+                    (getLast (cdr lista))
+                  )))
+
+; Unifica 2 listas
+;Dominio: Al menos 2 listas
+;Recorrido: Lista
+; OJOS cons solo funciona con un numero y una lista, la deja en el primer elemento/
+;Con append se puede agregar un  elemento al final, agregandolo como lista '(X)
+;Derrepente es mejor usar list envez de '
+(define myAppend (lambda (L1 L2)
+                   (if (null? L1)
+                       L2
+                       (if (null? L2)
+                           L1
+                           (if (null? (cdr L1))
+                               (car L1)
+                               (if (null? cdr L2)
+                                   (cons L1 (car L2))
+                                   (myAppend L1 (cdr L2))
+  
+                                   ))
+                             )
+
+                       )
+                   ))
+
+; TDA Archivo
+; Puede tener una representacion en string
+
+'("root" '("carpeta 1" '("carpeta2" '("carpetA2" "archivoA2.1")) '("carpeta3" "jola.dic")))
+
+(define search (lambda (nomDir directorio)
+                 (if (null? (car directorio))
+                     null
+                     ()
+
+
+
+
+                 ))
