@@ -521,22 +521,37 @@
 ;##########################################################################################
 
 
-(define add1 (lambda (archivos) (lambda (workspace) 
-                                  (if (null? workspace)
-                                      null
-                                      (if (null? archivos)
-                                          null
-                                          (if (equal? (getArchivo (car( getWorkspace zonas))) (car archivos))
-                                              (append  (getArchivo (car( getWorkspace zonas))) ((add1 archivos) cdr workspace))
-                                              (add1 (cdr archivos) workspace)
 
-                                              )
-                                          )
-                                      )
-                                  )
-               )
-  )
- 
+;Dominio: arvhivo x workspace
+;Recorrido: lista
+;Descripcion:  Retorna una lista con los commits que tienen el nombre del archivo buscado en la primera posicion  de un elemento de una lista.
+
+
+(define add1 (lambda (archivo) (lambda (workspace) 
+                                 (if (null? workspace)
+                                     null
+                                     (if (equal? (getArchivo (car workspace)) archivo)
+                                         (cons  (car workspace) ((add1 archivo) (cdr workspace)))
+                                         ((add1 archivo) (cdr workspace))
+                                         )))))
+
+;Dominio: lista de archivos x workspace
+;Recorrido: lista de match
+;Descripcion: Recorre una lista de commits (Workspace) y compara su contenido con el primer elemento de cada
+;commit, si hay match lo guarda en una lista, cuando termina de recorrer ambas listas retorna una lista
+;con todos los elementos encontrados.
+;Ejemplo: ((add2 (list "hola" "sebas" )) (list (list "hola" "Seba Villa" 202003031829 "agregar hora" "add hora") (list "holsa" "Seba Villa" 202003031829 "agregar hora" "add hora") (list "sebas" "Seba Villa" 202003031829 "agregar hora" "add hora" )))
+; > '(("hola" "Seba Villa" 202003031829 "agregar hora" "add hora")
+;  ("sebas" "Seba Villa" 202003031829 "agregar hora" "add hora"))
+
+ (define add2 (lambda (archivos) (lambda (workspace) 
+                                 (if (null? archivos)
+                                     null
+                                     (append ((add1 (car archivos)) workspace) ((add2 (cdr archivos)) workspace) )
+                                     )
+                                   )
+                ))
+                                     
 
 
 
