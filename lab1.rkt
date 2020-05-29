@@ -194,6 +194,7 @@
 
 
 
+
 ;##########################################################################################
 ;###################################TDA ZONAS##############################################
 ;##########################################################################################
@@ -443,9 +444,36 @@
 ;##########################################################################################
 
 
-;Descripcion: Funciona que retorna una lista con todos los cambios desde el remote repository
+;Descripcion: Funciona que retorna una lista con todos los cambios (commits) desde el remote repository
 ; al workspace
+;Dominio: zonas
+;Recorrido: nuevas zonas
+
+(define (pull zonas)
+  (if (null? zonas)
+      (list (getRemote zonas) (getIndex zonas) (getLocal zonas) (getRemote zonas))
+      (if (workspace? (car zonas))
+          (pull (cdr zonas))
+          "Las zonas no tienen el formato correcto"
+
+          )
+      )
+  )
 
 
+;##########################################################################################
+;######################################ADD#################################################
+;##########################################################################################
+  
+;Descripcion: Funcion que añade los cambios locales registrados en el workspace al index
+;registrados en la zona de trabajo.
+;Dominio: archivos
+;Recorrido: Una nueva zona donde se ven reflejado los cambios hechos en los archivos especificados
 
+;# CURRIFICACION CTM
+(define (suma n) (+ n n))
 
+(define git (lambda (a) (lambda (b) (* a (suma b)))))
+
+; # CADA VEZ QUE SE USA GIT SE VA CREANDO UN COMMIT, ANALIZAR, SE VA CREANDO PERO NO ENTERO ALGUNOS ELEMENTOS
+; QUEDAN EN NULL
