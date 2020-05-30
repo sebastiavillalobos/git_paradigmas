@@ -490,8 +490,8 @@
 
 ;MODIFICADORES
 
-(define (addLogs comando tiempo zonas)
-  (list (getWorkspace zonas) (getIndex zonas) (getLocal zonas) (getRemote zonas) (append (list tiempo comando) (getLogs zonas) ))
+(define (addLogs comando tiempo)
+  (list comando tiempo)
   )
 
 
@@ -507,12 +507,26 @@
 
 
 ;Descripcion: Funciona que retorna una lista con todos los cambios (commits) desde el remote repository
-; al workspace
-;Dominio: zonas
+; al workspace y agrega un log con una marca de tiempo
+;Dominio: zonas x tiempo
 ;Recorrido: nuevas zonas
+;Ejemplo
+#|
+> (((git pull)'(() () () () (() ("pull" 2332))))35345)
+'(() () () () (("pull" 35345) () ("pull" 2332)))
+> (((git pull)'(() () () () (() ("pull" 2332))))35345)
+'(() () () () (("pull" 35345) () ("pull" 2332)))
+> (((git pull)(((git pull)'(() () () () (() ("pull" 2332))))35345))232323)
+'(() () () () (("pull" 232323) ("pull" 35345) () ("pull" 2332)))
+|#
 
 (define pull (lambda (zonas) (lambda (tiempo)
-                               (list (getRemote zonas)) (getIndex zonas) (getLocal zonas) (getRemote zonas) (addLogs "pull" tiempo zonas))))
+                               (list (getRemote zonas) (getIndex zonas) (getLocal zonas) (getRemote zonas)
+                                     (if (null?(getLogs zonas))
+                                         (addLogs "pull" tiempo)
+                                         (cons (addLogs "pull" tiempo) (getLogs zonas))
+                                         )
+                                     ))))
 
 
 
@@ -520,6 +534,35 @@
 ;######################################ADD#################################################
 ;##########################################################################################
 
+;Dominio: nombres de archivos x zonas x marca de tiempo
+;Recorrido: nuevas zonas
+;Descriupcion: Funcion que añade los cambios locales registrados en el workspace al index en las zonas de trabajo, especificando la lista de nombre de archivos
+; concretos (nombres como string)
+;Ejemplo:
+#|
+> ((((git add)null)null)234324)
+'(() () () () ("add" 234324))
+> ((((git add)null)'(() () () () ("add" 234324)))2342)
+'(() () () () (("add" 2342) "add" 234324))
+> (((git pull)'(() () () () (("add" 2342) "add" 234324)))12)
+'(() () () () (("pull" 12) ("add" 2342) "add" 234324))
+|#
+
+(define add (lambda (archivos) (lambda (zonas) (lambda (tiempo)
+
+                                                 (list (getWorkspace zonas) (if (null? archivos)
+                                                                                (getWorkspace zonas)
+                                                                                (if (null? (getIndex zonas))
+                                                                                    ((add2 archivos)(getWorkspace zonas))
+                                                                                    (cons ((add2 archivos)(getWorkspace zonas)) (getIndex zonas))
+                                                                                    )) (getLocal zonas) (getRemote zonas) (if (null?(getLogs zonas))
+                                                                                                                              (addLogs "add" tiempo)
+                                                                                                                              (cons (addLogs "add" tiempo) (getLogs zonas))
+                                                                                                                              ))))))
+
+
+
+   
 
 
 ;Dominio: arvhivo x workspace
@@ -544,30 +587,132 @@
 ; > '(("hola" "Seba Villa" 202003031829 "agregar hora" "add hora")
 ;  ("sebas" "Seba Villa" 202003031829 "agregar hora" "add hora"))
 
- (define add2 (lambda (archivos) (lambda (workspace) 
-                                 (if (null? archivos)
-                                     null
-                                     (append ((add1 (car archivos)) workspace) ((add2 (cdr archivos)) workspace) )
-                                     )
-                                   )
-                ))
+(define add2 (lambda (archivos) (lambda (workspace) 
+                                  (if (null? archivos)
+                                      null
+                                      (append ((add1 (car archivos)) workspace) ((add2 (cdr archivos)) workspace) )
+                                      )
+                                  )
+               ))
                                      
 
 
 
 
+;##########################################################################################
+;####################################COMMIT################################################
+;##########################################################################################
 
-;Descripcion: Funcion que añade los cambios locales registrados en el workspace al index
-;registrados en la zona de trabajo.
-;Dominio: archivos
-;Recorrido: Una nueva zona donde se ven reflejado los cambios hechos en los archivos especificados
-
-;# CURRIFICACION CTM
-(define (suma n m) (+ n m))
-
-(define giat (lambda (a) (lambda (b) (* a (suma b)))))
-
-; # CADA VEZ QUE SE USA GIT SE VA CREANDO UN COMMIT, ANALIZAR, SE VA CREANDO PERO NO ENTERO ALGUNOS ELEMENTOS
-; QUEDAN EN NULL
+;Dominio: mensaje x zonas x marca de tiempo
+;Recorrido: nuevas zonas
+;Descripcion: Funcion que genera un commit con los cambios almacenados en el index, especificando un mensaje descriptivo "string" para llevarlos al Local Repository
+;Ejemplo:(((commit "cambios12")null)1212)
+;'(()
+;  ()
+;  ((() "Sebastian Villalobos" 1212 "cambios12" ()))
+;  ()
+;  ("commit" 1212))
 
 
+(define commit (lambda (mensaje) (lambda (zonas) (lambda (tiempo)
+                                                   (list (getWorkspace zonas) (getIndex zonas) (cons  (createCommit (listaArchivos (getIndex zonas)) "Sebastian Villalobos" tiempo mensaje (listaCambios (getIndex zonas))) (getLocal zonas)) (getRemote zonas)  (if (null?(getLogs zonas))
+                                                                                                                                                                                                                                                                     (addLogs "commit" tiempo)
+                                                                                                                                                                                                                                                                     (cons (addLogs "commit" tiempo) (getLogs zonas))))))))
+
+
+
+;Descripcion: Crea una lista con todos los cambios realizados en los archivos del INDEX
+(define (listaCambios index)
+  (if (null? index)
+      null
+      (cons (getCambios (car index)) (listaArchivos (cdr index)))
+      )
+  )
+
+
+;Descripcion Crea una lista con todos los archivos en el INDEX
+(define (listaArchivos index)
+  (if (null? index)
+      null
+      (cons (getArchivo (car index)) (listaArchivos (cdr index)))
+      )
+  )
+
+
+
+;##########################################################################################
+;######################################PUSH################################################
+;##########################################################################################
+
+;Dominio: zonas
+;Recorrido: nuevas zonas
+;Descripcion: Funcion que envia los commits desde el repositorio local al repositorio remoto registrado en las zonas de trabajo, los cambios
+;reflejados en el retiorno de la funcion corresponden a una nueva version de zonas.
+
+
+(define push (lambda (zonas) (lambda (tiempo)
+                               (list (getWorkspace zonas) (getIndex zonas) (getLocal zonas) (cons (getLocal zonas) (getRemote zonas)) (if (null?(getLogs zonas))
+                                                                                                                                          (addLogs "push" tiempo)
+                                                                                                                                          (cons (addLogs "push" tiempo) (getLogs zonas)))))))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+               ;pone al final el primer elemento de una lista
+               (define (ponUltimo lista)
+                 (invierteLista (cons (car lista) (invierteLista (cdr lista))) )
+                 )
+
+
+
+               ; invierte los elementos de una lista
+               ;Recursion de cola
+               (define (invierteLista lista)
+                 (invierteLista1 lista null)
+
+                 )
+
+
+               (define (invierteLista1 lista aux)
+                 (if (null? lista)
+                     aux
+                     (invierteLista1 (cdr lista) (cons (car lista) aux)) 
+                     ))
+
+
+               ;# CURRIFICACION CTM
+               (define (suma n m) (+ n m))
+
+               (define giat (lambda (a) (lambda (b) (* a (suma b)))))
+
+               ; # CADA VEZ QUE SE USA GIT SE VA CREANDO UN COMMIT, ANALIZAR, SE VA CREANDO PERO NO ENTERO ALGUNOS ELEMENTOS
+               ; QUEDAN EN NULL
+
+
+               
