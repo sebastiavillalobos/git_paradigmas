@@ -1,0 +1,22 @@
+
+Requerimientos Funcionales
+TDAs 1
+Git 1
+Pull 1
+Add 0.75
+Commit 0.75
+Push 1
+Zonas -> String 0
+Logs -> 0.5
+
+Requerimientos No Funcionales
+Autoevaluacion 1
+Implementacion Scheme 1
+Dr Racket 6.11 1
+Funciones estandar 1
+No usar define dentro de otras funciones 1
+Funciones comentadas 0.75
+Respetar Entrada y Salida 1
+Estructurar en archivos separados 0
+Historiañ de TRabajo en Git 1
+3 Ejemplos 1

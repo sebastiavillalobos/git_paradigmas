@@ -56,8 +56,8 @@
 ;Ejemplo: (createCommit "lab1.rkt" "Seba Villa" 202003031829 "agregar hora" "add hora")
 ; > '("lab1.rkt" "Seba Villa" 202003031829 "agregar hora" "add hora")
 (define (createCommit archivo autor fecha descripcion cambios)
-  (if (and (and (autor? autor) (fecha? fecha))(and (descripcion? descripcion) (cambios? cambios)))
-      "(list archivo autor fecha descripcion cambios)"
+  (if (and (and autor? fecha?)(and descripcion? cambios?))
+      (list archivo autor fecha descripcion cambios)
       "Commit con parametros no permitidos"
       )
   )
@@ -235,7 +235,7 @@
 ;Recorrido: zonas
 ;descripcion: Crea una lista que representa las zonas del GIT
 (define (createZonas workspace index local remote logs)
-  (if (and (and( workspace? workspace ) (index? index)) (and (local? local)( remote? remote)))
+  (if (and (and workspace? index?) (and local? remote?))
       (list workspace index local remote logs)
       "Las zonas tienen un formato incorrecto"
       )
@@ -510,7 +510,6 @@
 ; al workspace y agrega un log con una marca de tiempo
 ;Dominio: zonas x tiempo
 ;Recorrido: nuevas zonas
-;Recursion: Cola
 ;Ejemplo
 #|
 > (((git pull)'(() () () () (() ("pull" 2332))))35345)
@@ -529,24 +528,6 @@
                                          )
                                      ))))
 
-(define pullCola (lambda (zonas) (lambda (tiempo) (lambda (aux)
-                                                    (if (null? zonas)
-                                                        aux
-                                                        (((pullCola (cdr zonas) )tiempo) (cons (car zonas) aux ) )
-
-                                                        )))))
-
-; invierte los elementos de una lista
-;Recursion de cola
-(define (invierteLista lista)
-  (invierteLista1 lista null)
-
-  )
-(define (invierteLista1 lista aux)
-  (if (null? lista)
-      aux
-      (invierteLista1 (cdr lista) (cons (car lista) aux)) 
-      ))
 
 
 ;##########################################################################################
@@ -557,7 +538,6 @@
 ;Recorrido: nuevas zonas
 ;Descriupcion: Funcion que añade los cambios locales registrados en el workspace al index en las zonas de trabajo, especificando la lista de nombre de archivos
 ; concretos (nombres como string)
-;Recursion: Natural
 ;Ejemplo:
 #|
 > ((((git add)null)null)234324)
@@ -645,9 +625,10 @@
 (define (listaCambios index)
   (if (null? index)
       null
-      (cons (getCambios (car index)) (listaCambios (cdr index)))
+      (cons (getCambios (car index)) (listaArchivos (cdr index)))
       )
   )
+
 
 ;Descripcion Crea una lista con todos los archivos en el INDEX
 (define (listaArchivos index)
@@ -674,596 +655,64 @@
                                                                                                                                           (addLogs "push" tiempo)
                                                                                                                                           (cons (addLogs "push" tiempo) (getLogs zonas)))))))
 
- 
-
-;##########################################################################################
-;######################################LOGS################################################
-;##########################################################################################
-
-
-(define log (lambda (zonas)
-              (list (car (getLogs zonas)) (car (cdr(getLogs zonas))) (car (cdr(cdr  (getLogs zonas)))) (car (cdr (cdr (cdr (getLogs zonas))))) (car (cdr (cdr (cdr (cdr( getLogs zonas)))))))))
-                                             
-
-
-
-
-;***************************************************************************************
-;***************************************EJEMPLOS****************************************
-;***************************************************************************************                         
-
-
-; ==============================================================
-; ======================Escenario1==============================
-; ==============================================================
-; Zonas de trabajo
-
-;Workspace: Vacio
-;Index: Vacio
-;Local Repository: Vacio
-;Remote Repository: 2 archivos con 7 commits
-;Logs: vacio
-
-;Representacion Zona1:
-
-(define commit1 (createCommit "lab1.rkt" "Seba Villa" 202003031829 "comentario1" "cambio1"))
-(define commit2 (createCommit "lab2.rkt" "Seba Villa" 202003031831 "comentario2" "cambio2"))
-(define commit3 (createCommit "lab1.rkt" "Igna Perez" 202003030954 "comentario3" "cambio3"))
-(define commit4 (createCommit "lab1.rkt" "Seba Villa" 202004031829 "comentario4" "cambio4"))
-(define commit5 (createCommit "lab2.rkt" "Seba Villa" 202004030823 "comentario5" "cambio5"))
-(define commit6 (createCommit "lab2.rkt" "Seba Villa" 202010031825 "comentario6" "cambio6"))
-(define commit7 (createCommit "lab1.rkt" "Igna Perez" 202012041629 "comentario7" "cambio7"))
-(define commit8 (createCommit "lab1.rkt" "Seba Villa" 202019041229 "comentario8" "cambio8"))
-
-
-(define zona1 (createZonas null null null (list commit1 commit2 commit3 commit4 commit5 commit6 commit7 commit8) null))
-
-; Pull de la zona1, se crea una nueva zona de trabajo y se agrega un log
-
-; (((git pull)zona1)202001061001)
-
-#|
-Retorno
-
-'((("lab1.rkt"
-    "Seba Villa"
-    202003031829
-    "comentario1"
-    "cambio1")
-   ("lab2.rkt"
-    "Seba Villa"
-    202003031831
-    "comentario2"
-    "cambio2")
-   ("lab1.rkt"
-    "Igna Perez"
-    202003030954
-    "comentario3"
-    "cambio3")
-   ("lab1.rkt"
-    "Seba Villa"
-    202004031829
-    "comentario4"
-    "cambio4")
-   ("lab2.rkt"
-    "Seba Villa"
-    202004030823
-    "comentario5"
-    "cambio5")
-   ("lab2.rkt"
-    "Seba Villa"
-    202010031825
-    "comentario6"
-    "cambio6")
-   ("lab1.rkt"
-    "Igna Perez"
-    202012041629
-    "comentario7"
-    "cambio7")
-   ("lab1.rkt"
-    "Seba Villa"
-    202019041229
-    "comentario8"
-    "cambio8"))
-  ()
-  ()
-  (("lab1.rkt"
-    "Seba Villa"
-    202003031829
-    "comentario1"
-    "cambio1")
-   ("lab2.rkt"
-    "Seba Villa"
-    202003031831
-    "comentario2"
-    "cambio2")
-   ("lab1.rkt"
-    "Igna Perez"
-    202003030954
-    "comentario3"
-    "cambio3")
-   ("lab1.rkt"
-    "Seba Villa"
-    202004031829
-    "comentario4"
-    "cambio4")
-   ("lab2.rkt"
-    "Seba Villa"
-    202004030823
-    "comentario5"
-    "cambio5")
-   ("lab2.rkt"
-    "Seba Villa"
-    202010031825
-    "comentario6"
-    "cambio6")
-   ("lab1.rkt"
-    "Igna Perez"
-    202012041629
-    "comentario7"
-    "cambio7")
-   ("lab1.rkt"
-    "Seba Villa"
-    202019041229
-    "comentario8"
-    "cambio8"))
-  ("pull" 202001061001))
-|#
-
-; Add, se agregarán al Index todos los cambios hechos en el archivo "lab1.rkt", retornando una nueva zona y se agrega un log
-
-; ((((git add)(list "lab1.rkt"))(((git pull)zona1)202001061001))202001061524)
-
-#|
-'((("lab1.rkt"
-    "Seba Villa"
-    202003031829
-    "comentario1"
-    "cambio1")
-   ("lab2.rkt"
-    "Seba Villa"
-    202003031831
-    "comentario2"
-    "cambio2")
-   ("lab1.rkt"
-    "Igna Perez"
-    202003030954
-    "comentario3"
-    "cambio3")
-   ("lab1.rkt"
-    "Seba Villa"
-    202004031829
-    "comentario4"
-    "cambio4")
-   ("lab2.rkt"
-    "Seba Villa"
-    202004030823
-    "comentario5"
-    "cambio5")
-   ("lab2.rkt"
-    "Seba Villa"
-    202010031825
-    "comentario6"
-    "cambio6")
-   ("lab1.rkt"
-    "Igna Perez"
-    202012041629
-    "comentario7"
-    "cambio7")
-   ("lab1.rkt"
-    "Seba Villa"
-    202019041229
-    "comentario8"
-    "cambio8"))
-  (("lab1.rkt"
-    "Seba Villa"
-    202003031829
-    "comentario1"
-    "cambio1")
-   ("lab1.rkt"
-    "Igna Perez"
-    202003030954
-    "comentario3"
-    "cambio3")
-   ("lab1.rkt"
-    "Seba Villa"
-    202004031829
-    "comentario4"
-    "cambio4")
-   ("lab1.rkt"
-    "Igna Perez"
-    202012041629
-    "comentario7"
-    "cambio7")
-   ("lab1.rkt"
-    "Seba Villa"
-    202019041229
-    "comentario8"
-    "cambio8"))
-  ()
-  (("lab1.rkt"
-    "Seba Villa"
-    202003031829
-    "comentario1"
-    "cambio1")
-   ("lab2.rkt"
-    "Seba Villa"
-    202003031831
-    "comentario2"
-    "cambio2")
-   ("lab1.rkt"
-    "Igna Perez"
-    202003030954
-    "comentario3"
-    "cambio3")
-   ("lab1.rkt"
-    "Seba Villa"
-    202004031829
-    "comentario4"
-    "cambio4")
-   ("lab2.rkt"
-    "Seba Villa"
-    202004030823
-    "comentario5"
-    "cambio5")
-   ("lab2.rkt"
-    "Seba Villa"
-    202010031825
-    "comentario6"
-    "cambio6")
-   ("lab1.rkt"
-    "Igna Perez"
-    202012041629
-    "comentario7"
-    "cambio7")
-   ("lab1.rkt"
-    "Seba Villa"
-    202019041229
-    "comentario8"
-    "cambio8"))
-  (("add" 202001061524) "pull" 202001061001))
-|#
-
-; Commit: Agrega al local repository un commit con todos los cambios realizaados en el index
-
-; ((((git commit)"Todos los cambios agregados")((((git add)(list "lab1.rkt"))(((git pull)zona1)202001061001))202001061524))202001061454)
-
-#|
-'((("lab1.rkt"
-    "Seba Villa"
-    202003031829
-    "comentario1"
-    "cambio1")
-   ("lab2.rkt"
-    "Seba Villa"
-    202003031831
-    "comentario2"
-    "cambio2")
-   ("lab1.rkt"
-    "Igna Perez"
-    202003030954
-    "comentario3"
-    "cambio3")
-   ("lab1.rkt"
-    "Seba Villa"
-    202004031829
-    "comentario4"
-    "cambio4")
-   ("lab2.rkt"
-    "Seba Villa"
-    202004030823
-    "comentario5"
-    "cambio5")
-   ("lab2.rkt"
-    "Seba Villa"
-    202010031825
-    "comentario6"
-    "cambio6")
-   ("lab1.rkt"
-    "Igna Perez"
-    202012041629
-    "comentario7"
-    "cambio7")
-   ("lab1.rkt"
-    "Seba Villa"
-    202019041229
-    "comentario8"
-    "cambio8"))
-  (("lab1.rkt"
-    "Seba Villa"
-    202003031829
-    "comentario1"
-    "cambio1")
-   ("lab1.rkt"
-    "Igna Perez"
-    202003030954
-    "comentario3"
-    "cambio3")
-   ("lab1.rkt"
-    "Seba Villa"
-    202004031829
-    "comentario4"
-    "cambio4")
-   ("lab1.rkt"
-    "Igna Perez"
-    202012041629
-    "comentario7"
-    "cambio7")
-   ("lab1.rkt"
-    "Seba Villa"
-    202019041229
-    "comentario8"
-    "cambio8"))
-  ((("lab1.rkt"
-     "lab1.rkt"
-     "lab1.rkt"
-     "lab1.rkt"
-     "lab1.rkt")
-    "Sebastian Villalobos"
-    202001061454
-    "Todos los cambios agregados"
-    ("cambio1" "cambio3" "cambio4" "cambio7" "cambio8")))
-  (("lab1.rkt"
-    "Seba Villa"
-    202003031829
-    "comentario1"
-    "cambio1")
-   ("lab2.rkt"
-    "Seba Villa"
-    202003031831
-    "comentario2"
-    "cambio2")
-   ("lab1.rkt"
-    "Igna Perez"
-    202003030954
-    "comentario3"
-    "cambio3")
-   ("lab1.rkt"
-    "Seba Villa"
-    202004031829
-    "comentario4"
-    "cambio4")
-   ("lab2.rkt"
-    "Seba Villa"
-    202004030823
-    "comentario5"
-    "cambio5")
-   ("lab2.rkt"
-    "Seba Villa"
-    202010031825
-    "comentario6"
-    "cambio6")
-   ("lab1.rkt"
-    "Igna Perez"
-    202012041629
-    "comentario7"
-    "cambio7")
-   ("lab1.rkt"
-    "Seba Villa"
-    202019041229
-    "comentario8"
-    "cambio8"))
-  (("commit" 202001061454)
-   ("add" 202001061524)
-   "pull"
-   202001061001))
-|#
-
-;Push: Envía los commit del repositorio local al repositorio remoto
-
-; (((git push)((((git commit)"Todos los cambios agregados")((((git add)(list "lab1.rkt"))(((git pull)zona1)202001061001))202001061524))202001061454))202001061923)
-
-#|
-'((("lab1.rkt"
-    "Seba Villa"
-    202003031829
-    "comentario1"
-    "cambio1")
-   ("lab2.rkt"
-    "Seba Villa"
-    202003031831
-    "comentario2"
-    "cambio2")
-   ("lab1.rkt"
-    "Igna Perez"
-    202003030954
-    "comentario3"
-    "cambio3")
-   ("lab1.rkt"
-    "Seba Villa"
-    202004031829
-    "comentario4"
-    "cambio4")
-   ("lab2.rkt"
-    "Seba Villa"
-    202004030823
-    "comentario5"
-    "cambio5")
-   ("lab2.rkt"
-    "Seba Villa"
-    202010031825
-    "comentario6"
-    "cambio6")
-   ("lab1.rkt"
-    "Igna Perez"
-    202012041629
-    "comentario7"
-    "cambio7")
-   ("lab1.rkt"
-    "Seba Villa"
-    202019041229
-    "comentario8"
-    "cambio8"))
-  (("lab1.rkt"
-    "Seba Villa"
-    202003031829
-    "comentario1"
-    "cambio1")
-   ("lab1.rkt"
-    "Igna Perez"
-    202003030954
-    "comentario3"
-    "cambio3")
-   ("lab1.rkt"
-    "Seba Villa"
-    202004031829
-    "comentario4"
-    "cambio4")
-   ("lab1.rkt"
-    "Igna Perez"
-    202012041629
-    "comentario7"
-    "cambio7")
-   ("lab1.rkt"
-    "Seba Villa"
-    202019041229
-    "comentario8"
-    "cambio8"))
-  ()
-  (()
-   ("lab1.rkt"
-    "Seba Villa"
-    202003031829
-    "comentario1"
-    "cambio1")
-   ("lab2.rkt"
-    "Seba Villa"
-    202003031831
-    "comentario2"
-    "cambio2")
-   ("lab1.rkt"
-    "Igna Perez"
-    202003030954
-    "comentario3"
-    "cambio3")
-   ("lab1.rkt"
-    "Seba Villa"
-    202004031829
-    "comentario4"
-    "cambio4")
-   ("lab2.rkt"
-    "Seba Villa"
-    202004030823
-    "comentario5"
-    "cambio5")
-   ("lab2.rkt"
-    "Seba Villa"
-    202010031825
-    "comentario6"
-    "cambio6")
-   ("lab1.rkt"
-    "Igna Perez"
-    202012041629
-    "comentario7"
-    "cambio7")
-   ("lab1.rkt"
-    "Seba Villa"
-    202019041229
-    "comentario8"
-    "cambio8"))
-  (("push" 202001061923)
-   ("commit" 202001061454)
-   ("add" 202001061524)
-   "pull"
-   202001061001))
-|#
-
-;Log: Retorna los ultimos 5 logs de la zona de trabajo
-
-; ((git log)(((git push)((((git commit)"Todos los cambios agregados")((((git add)(list "lab1.rkt"))(((git pull)zona1)202001061001))202001061524))202001061454))202001061923))
-
-#|
-'(("push" 202001061923)
-  ("commit" 202001061454)
-  ("add" 202001061524)
-  "pull"
-  202001061001)
-|#
-
-
-
-; ==============================================================
-; ======================Escenario2==============================
-; ==============================================================
-; Todas las zonas vacias.
-
-(define zona2 null)
-
-; Pull de zonas
-; (((git pull)zona2)202001061254)
-;'(() () () () ("pull" 202001061254))
-
-; Add, no hay archivos creados
-; ((((git add)null)(((git pull)zona2)202001061254))202001061255)
-; '(() () () () (("add" 202001061255) "pull" 202001061254))
-
-
-; Commit
-; ((((git commit)"se hace nada")'(() () () () (("add" 202001061255) "pull" 202001061254)))202001061256)
-#|
-'(()
-  ()
-  ((()
-    "Sebastian Villalobos"
-    202001061256
-    "se hace nada"
-    ()))
-  ()
-  (("commit" 202001061256)
-   ("add" 202001061255)
-   "pull"
-   202001061254))
-|#
-
-; Push
-; (((git push)((((git commit)"se hace nada")'(() () () () (("add" 202001061255) "pull" 202001061254)))202001061256))202001061257)
-
-#|
-'(()
-  ()
-  ()
-  (())
-  (("push" 202001061257)
-   ("commit" 202001061256)
-   ("add" 202001061255)
-   "pull"
-   202001061254))
-|#
-
-
-; Logs
-; ((git log)(((git push)((((git commit)"se hace nada")'(() () () () (("add" 202001061255) "pull" 202001061254)))202001061256))202001061257))
-#|
-'(("push" 202001061257)
-  ("commit" 202001061256)
-  ("add" 202001061255)
-  "pull"
-  202001061254)|#
-
-
-
-; ==============================================================
-; ======================Escenario3==============================
-; ==============================================================
-
-; En este escenario se intentará aplicar los comandos a una zona sin el formato correcto y con commits inadecuados.
-
-; (createCommit 34535 "dsfgdfg" 34324234 3423214324 "dfd")
-; "Commit con parametros no permitidos"
-
-;(createZonas 234324 null "3434" 34334 null)
-;"Las zonas tienen un formato incorrecto"
-
-
-; Una zona con commits ingresados sin uso de su funcion constructora
-;(define zona3 (list (list 34324 "4353" 435)(list 34324 "4353" 435)(list 34324 "4353" 435)(list 34324 "4353" 435)(list 34324 "4353" 435)))
-
-
-;Al no tener el formato correcto la aplicacion de comandos no se permite y se cae el programa, pero gracias a los validadores usados
-; en la construccion no es posible llegar a esta instancia.
 
 
 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+               ;pone al final el primer elemento de una lista
+               (define (ponUltimo lista)
+                 (invierteLista (cons (car lista) (invierteLista (cdr lista))) )
+                 )
+
+
+
+               ; invierte los elementos de una lista
+               ;Recursion de cola
+               (define (invierteLista lista)
+                 (invierteLista1 lista null)
+
+                 )
+
+
+               (define (invierteLista1 lista aux)
+                 (if (null? lista)
+                     aux
+                     (invierteLista1 (cdr lista) (cons (car lista) aux)) 
+                     ))
+
+
+               ;# CURRIFICACION CTM
+               (define (suma n m) (+ n m))
+
+               (define giat (lambda (a) (lambda (b) (* a (suma b)))))
+
+               ; # CADA VEZ QUE SE USA GIT SE VA CREANDO UN COMMIT, ANALIZAR, SE VA CREANDO PERO NO ENTERO ALGUNOS ELEMENTOS
+               ; QUEDAN EN NULL
+
+
+               

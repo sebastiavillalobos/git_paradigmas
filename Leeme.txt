@@ -1,14 +1,3 @@
-# git_paradigmas
-
-Trabajo de laboratorio para el ramo de paradigmas de programación USACH
-by Sebastián Ignacio Villalobos Pérez
-
-Profesor: Roberto Gonzalez
-Ayudante: Nicolas Alarcon
-
-
-
-
 # Manual de usuario
 
 Para poder usar los comandos de la aplicacion GIT, se deben aplicar con el siguiente formato
